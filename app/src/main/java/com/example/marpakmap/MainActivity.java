@@ -16,17 +16,19 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
-import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
-    private GoogleMap googleMap;
+    private GoogleMap gMap;
     private SupportMapFragment mapFragment;
     private List<LatLng> markedList = new ArrayList<>();
     private List<LatLng> polylineList = new ArrayList<>();
@@ -34,10 +36,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Button addButton;
     private Button resetButton;
 
+    private HashMap<String, LatLng> markersList = new HashMap<>();
+
     private boolean canAddPolgen = true;
     private boolean canAddPolyline = false;
-
-    LiveData<Boolean> isPolygenCreated = new MediatorLiveData<>();
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -79,16 +81,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
-        this.googleMap = googleMap;
+        this.gMap = googleMap;
         LatLng slMap = new LatLng(7.8731, 80.7718);
-        this.googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(slMap, 10.0f));
+        this.gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(slMap, 10.0f));
 
-            this.googleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            this.gMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
                 @Override
                 public void onMapClick(@NonNull LatLng latLng) {
                     if (canAddPolgen) {
-                        markedList.add(latLng);
-                        createPolygen(markedList);
+                        MarkerOptions markerOptions = new MarkerOptions().position(latLng).draggable(true);
+                        Marker marker = gMap.addMarker(markerOptions);
+                        markersList.put(marker.getId(), latLng);
+                        //markedList.add(latLng);
+                        createPolygen(markersList);
                     }
 
                     if (canAddPolyline) {
@@ -97,22 +102,43 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
                 }
             });
+
+            this.gMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
+                int position = 0;
+                @Override
+                public void onMarkerDrag(@NonNull Marker marker) {
+
+                }
+
+                @Override
+                public void onMarkerDragEnd(@NonNull Marker marker) {
+                    markersList.replace(marker.getId(), marker.getPosition());
+                    polygon.remove();
+                    createPolygen(markersList);
+                }
+
+                @Override
+                public void onMarkerDragStart(@NonNull Marker marker) {
+                    //markersList.remove(marker.getId());
+
+                }
+            });
     }
 
 
-    private void createPolygen(List<LatLng> list) {
-        PolygonOptions polygonOptions = new PolygonOptions().addAll(list).clickable(true);
-        polygon = this.googleMap.addPolygon(polygonOptions);
+    private void createPolygen(HashMap<String, LatLng> list) {
+        PolygonOptions polygonOptions = new PolygonOptions().addAll(list.values()).clickable(true);
+        polygon = this.gMap.addPolygon(polygonOptions);
         polygon.setFillColor(Color.rgb(95,123,177));
         polygon.setStrokeColor(Color.rgb(95,123,238));
 
-        if (list.size() > 2) {
+        if (list.values().size() > 2) {
             addButton.setEnabled(true);
         }
     }
 
     private void addPolyLine(List<LatLng> list) {
-        googleMap.addPolyline(new PolylineOptions()
+        this.gMap.addPolyline(new PolylineOptions()
                 .clickable(true)
                 .width(1)
                 .color(Color.rgb(95,123,238)).addAll(list));
