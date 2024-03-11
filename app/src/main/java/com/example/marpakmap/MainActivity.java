@@ -104,7 +104,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             });
 
             this.gMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
-                int position = 0;
                 @Override
                 public void onMarkerDrag(@NonNull Marker marker) {
 
