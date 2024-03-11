@@ -2,8 +2,6 @@ package com.example.marpakmap;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MediatorLiveData;
 
 import android.annotation.SuppressLint;
 import android.graphics.Color;
@@ -16,7 +14,6 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polygon;
@@ -39,7 +36,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Button resetButton;
 
     private HashMap<String, LatLng> markersList = new HashMap<>();
-    private List<LatLng> poliLineList = new ArrayList<>();
 
     private boolean canAddPolgen = true;
     private boolean canAddPolyline = false;
@@ -95,14 +91,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         MarkerOptions markerOptions = new MarkerOptions().position(latLng).draggable(true);
                         Marker marker = gMap.addMarker(markerOptions);
                         markersList.put(marker.getId(), latLng);
-                        //markedList.add(latLng);
                         createPolygen(markersList);
                         addPolyLine(markersList);
                     }
 
                     if (canAddPolyline) {
                         polylineList.add(latLng);
-                        //addPolyLine(polylineList);
                     }
                 }
             });
@@ -145,11 +139,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                     if (polylineList.size() == 2) {
                         Polyline line = gMap.addPolyline(new PolylineOptions()
-                                .clickable(true) // Optional: Allow interaction with the polyline
-                                .width(5) // Adjust width as needed
-                                .color(Color.RED) // Set polyline color
-                                .geodesic(true) // Optional: Set to true for a more curved line
-                                .zIndex(-1) // Optional: Adjust layer position
+                                .clickable(true)
+                                .width(5)
+                                .color(Color.RED)
+                                .geodesic(true)
+                                .zIndex(1)
                                 .addAll(polylineList));
                     }
                 }
