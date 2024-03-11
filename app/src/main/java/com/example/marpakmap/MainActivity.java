@@ -16,10 +16,12 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
@@ -37,6 +39,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Button resetButton;
 
     private HashMap<String, LatLng> markersList = new HashMap<>();
+    private List<LatLng> poliLineList = new ArrayList<>();
 
     private boolean canAddPolgen = true;
     private boolean canAddPolyline = false;
@@ -94,11 +97,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         markersList.put(marker.getId(), latLng);
                         //markedList.add(latLng);
                         createPolygen(markersList);
+                        addPolyLine(markersList);
                     }
 
                     if (canAddPolyline) {
                         polylineList.add(latLng);
-                        addPolyLine(polylineList);
+                        //addPolyLine(polylineList);
                     }
                 }
             });
@@ -122,6 +126,34 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 }
             });
+
+            this.gMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
+                @Override
+                public void onPolylineClick(@NonNull Polyline polyline) {
+                    double latitudeSum = 0;
+                    double longitudeSum = 0;
+
+                    for (LatLng point : polyline.getPoints()) {
+                        latitudeSum += point.latitude;
+                        longitudeSum += point.longitude;
+                    }
+
+                    int numPoints = polyline.getPoints().size();
+
+                    LatLng center = new LatLng(latitudeSum / numPoints, longitudeSum / numPoints);
+                    polylineList.add(center);
+
+                    if (polylineList.size() == 2) {
+                        Polyline line = gMap.addPolyline(new PolylineOptions()
+                                .clickable(true) // Optional: Allow interaction with the polyline
+                                .width(5) // Adjust width as needed
+                                .color(Color.RED) // Set polyline color
+                                .geodesic(true) // Optional: Set to true for a more curved line
+                                .zIndex(-1) // Optional: Adjust layer position
+                                .addAll(polylineList));
+                    }
+                }
+            });
     }
 
 
@@ -130,16 +162,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         polygon = this.gMap.addPolygon(polygonOptions);
         polygon.setFillColor(Color.rgb(95,123,177));
         polygon.setStrokeColor(Color.rgb(95,123,238));
+        addPolyLine(list);
 
         if (list.values().size() > 2) {
             addButton.setEnabled(true);
         }
     }
 
-    private void addPolyLine(List<LatLng> list) {
+    private void addPolyLine(HashMap<String , LatLng> list) {
         this.gMap.addPolyline(new PolylineOptions()
                 .clickable(true)
-                .width(1)
-                .color(Color.rgb(95,123,238)).addAll(list));
+                .width(5)
+                .color(Color.rgb(95,123,238)).addAll(list.values()));
     }
 }
